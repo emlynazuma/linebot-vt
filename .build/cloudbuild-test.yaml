@@ -1,0 +1,165 @@
+steps:
+  # Decrypt the file containing the key and download model file
+  - name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        gcloud beta secrets versions access latest --secret="${_DOT_ENV}" > .env
+
+  # upload fluentd to storage
+  - name: "gcr.io/cloud-builders/gsutil"
+    args:
+      [
+        "cp",
+        ".build/flutend.conf",
+        "gs://${_GCP_BUCKET}/fluentd-${_APP_NAME}.conf",
+      ]
+
+  # build image
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - build
+      - --cache-from
+      - ${_IMG_REPO}/$PROJECT_ID/${_APP_NAME}:latest
+      - -t
+      - ${_IMG_REPO}/$PROJECT_ID/${_APP_NAME}:latest
+      - -t
+      - ${_IMG_REPO}/$PROJECT_ID/${_APP_NAME}:$SHORT_SHA-$BUILD_ID
+      - .
+
+  # push docker image
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "${_IMG_REPO}/$PROJECT_ID/${_APP_NAME}:$SHORT_SHA-$BUILD_ID"]
+
+  # push docker image
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "${_IMG_REPO}/$PROJECT_ID/${_APP_NAME}:latest"]
+
+  # build instance template
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      - beta
+      - compute
+      - --project=$PROJECT_ID
+      - instance-templates
+      - create-with-container
+      - ${_APP_NAME}-$SHORT_SHA-$BUILD_ID
+      - --machine-type=e2-medium
+      - --network=projects/$PROJECT_ID/global/networks/vt-vpc
+      - --network-tier=PREMIUM
+      - --preemptible
+      - --service-account=${_GCP_PROJECT_NUMBER}-compute@developer.gserviceaccount.com
+      - --scopes=https://www.googleapis.com/auth/cloud-platform
+      - --tags=http-server,https-server
+      - --image-family=cos-stable
+      - --image-project=cos-cloud
+      - --boot-disk-size=10GB
+      - --boot-disk-type=pd-standard
+      - --container-image=${_IMG_REPO}/$PROJECT_ID/${_APP_NAME}:$SHORT_SHA-$BUILD_ID
+      - --container-mount-host-path=mount-path=/var/log/gunicorn,host-path=/var/log/docker-logs/gunicorn,mode=rw
+      - --container-tty
+      - --container-restart-policy=always
+      - --metadata=app-name=${_APP_NAME}
+      - --metadata-from-file=startup-script=.build/startup-script.sh
+
+  - name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: "/bin/bash"
+    args:
+      [
+        "-c",
+        "gcloud beta compute --project=$PROJECT_ID instance-groups managed create ${_APP_NAME}-grp --base-instance-name=${_APP_NAME}-grp --template=${_APP_NAME}-$SHORT_SHA-$BUILD_ID --size=1 --zone=${_CLOUDSDK_COMPUTE_ZONE} --health-check=default-http-health-check || true",
+      ]
+
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      - compute
+      - --project=$PROJECT_ID
+      - instance-groups
+      - managed
+      - set-autoscaling
+      - ${_APP_NAME}-grp
+      - --zone
+      - ${_CLOUDSDK_COMPUTE_ZONE}
+      - --cool-down-period
+      - "90"
+      - --max-num-replicas
+      - ${_MAX_REPLICAS}
+      - --min-num-replicas
+      - ${_MIN_REPLICAS}
+      - --target-cpu-utilization
+      - ${_TARGET_CPU_LOADING}
+
+  # apply instance groups
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      - compute
+      - --project=$PROJECT_ID
+      - instance-groups
+      - managed
+      - set-instance-template
+      - ${_APP_NAME}-grp
+      - --template
+      - ${_APP_NAME}-$SHORT_SHA-$BUILD_ID
+      - --zone
+      - ${_CLOUDSDK_COMPUTE_ZONE}
+
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      - beta
+      - compute
+      - --project=$PROJECT_ID
+      - instance-groups
+      - managed
+      - rolling-action
+      - start-update
+      - ${_APP_NAME}-grp
+      - --version
+      - template=${_APP_NAME}-$SHORT_SHA-$BUILD_ID
+      - --max-surge=1
+      - --max-unavailable=0
+      - --min-ready=90
+      - --zone=${_CLOUDSDK_COMPUTE_ZONE}
+
+  # deploy on cloud run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - beta
+      - run
+      - deploy
+      - ${_APP_NAME}
+      - --image
+      - ${_IMG_REPO}/$PROJECT_ID/${_APP_NAME}
+      - --region
+      - ${_CLOUD_RUN_REGION}
+      - --platform
+      - managed
+      - --quiet
+      - --memory=3G
+      - --port=80
+      - --timeout=20
+      - --project=$PROJECT_ID
+      - --allow-unauthenticated
+      - --max-instances=${_MAX_REPLICAS}
+      - --min-instances=${_MIN_REPLICAS}
+      - --concurrency=20
+      - --vpc-connector=asia-e1-vpc-connector
+      - --vpc-egress=${_VPC_EGRESS_CONF}
+
+images:
+  - "${_IMG_REPO}/$PROJECT_ID/${_APP_NAME}:latest"
+  - "${_IMG_REPO}/$PROJECT_ID/${_APP_NAME}:$SHORT_SHA-$BUILD_ID"
+
+substitutions:
+  _IMG_REPO: "asia.gcr.io"
+  _APP_NAME: "linebot"
+  _GCP_BUCKET: "vt-t"
+  _CLOUDSDK_COMPUTE_ZONE: "asia-east1-a"
+  _CLOUD_RUN_REGION: 'asia-east1'
+  _VPC_EGRESS_CONF: 'all'
+  _DOT_ENV: "linebot-test-env"
+  _BUCKEY: "vt-t-private"
+  _MIN_REPLICAS: "1"
+  _MAX_REPLICAS: "5"
+  _TARGET_CPU_LOADING: "0.7"
+  _GCP_PROJECT_NUMBER: "230108503268"
