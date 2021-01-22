@@ -1,3 +1,5 @@
+import json
+
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Header
 from linebot import LineBotApi, WebhookHandler
@@ -19,9 +21,10 @@ def health_check():
 @app.post("/callback")
 def callback(
     signature: str = Header(..., alias="X-Line-Signature"),
-    body: str = Body(...),
+    body: dict = Body(...),
 ):
-    logger.info("Request body: " + body)
+    body = json.dumps(body)
+    logger.info(f"Request body: {body}")
 
     try:
         handler.handle(body, signature)
