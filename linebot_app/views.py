@@ -5,9 +5,11 @@ from fastapi.param_functions import Body, Header
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from starlette.requests import Request
 
 from linebot_app import app, app_settings
 from linebot_app.util import logger
+
 
 line_bot_api = LineBotApi(app_settings.line_channel_access_token)
 handler = WebhookHandler(app_settings.line_channel_secret)
@@ -19,13 +21,13 @@ def health_check():
 
 
 @app.post("/callback")
-def callback(
+async def callback(
+    request: Request,
     signature: str = Header(..., alias="X-Line-Signature"),
-    body: dict = Body(...),
 ):
-    body = json.dumps(body)
+    body = await request.body()
+    body = body.decode()
     logger.info(f"Request body: {body}")
-
     try:
         handler.handle(body, signature)
     except InvalidSignatureError:
