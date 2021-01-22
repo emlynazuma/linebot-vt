@@ -1,0 +1,16 @@
+.vscode
+
+# cache
+**/**/__pycache__
+**/**/.pytest_cache
+
+# sonarcloud
+.sonarcloud.properties
+
+# local dev
+docker-compose.yml
+init_dev.sh
+.build
+README.md
+.*.csv
+.*.py

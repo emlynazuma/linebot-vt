@@ -1,0 +1,12 @@
+__pycache__
+.vscode
+.env
+.voicetube-test-service-account.json
+
+*.pyc
+.*.json
+.*.csv
+.*.py
+*.ftz
+
+.python-version
