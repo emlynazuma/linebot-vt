@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "voicetube_linebot"
+version = "1.0.0"
+description = ""
+authors = ["tongwai <anthony@voicetube.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+line-bot-sdk = "^1.18.0"
+fastapi = "^0.63.0"
+python-dotenv = "^0.15.0"
+
+[tool.poetry.dev-dependencies]
+pep8 = "^1.7.1"
+pylint = "^2.6.0"
+autopep8 = "^1.5.4"
+pytest = "^6.1.1"
+pycodestyle = "^2.6.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
