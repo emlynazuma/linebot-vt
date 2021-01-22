@@ -1,0 +1,13 @@
+version: '3.7'
+services:
+  search_api:
+    build:
+      context: .
+    command:
+      "dev"
+    ports:
+      - "80:80"
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=.voicetube-test-service-account.json
+    volumes:
+      - .:/app/src
