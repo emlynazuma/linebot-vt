@@ -13,6 +13,6 @@ fi
 
 gunicorn \
     --config "/app/src/${gunicorn_config}" \
-    search_app:app
+    linebot_app:app
 
 exec "$@"
