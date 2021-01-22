@@ -51,7 +51,7 @@ steps:
       - --preemptible
       - --service-account=${_GCP_PROJECT_NUMBER}-compute@developer.gserviceaccount.com
       - --scopes=https://www.googleapis.com/auth/cloud-platform
-      - --tags=http-server,https-server
+      - --tags=http-server
       - --image-family=cos-stable
       - --image-project=cos-cloud
       - --boot-disk-size=10GB
