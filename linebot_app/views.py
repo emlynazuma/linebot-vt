@@ -1,7 +1,5 @@
-import json
-
 from fastapi.exceptions import HTTPException
-from fastapi.param_functions import Body, Header
+from fastapi.param_functions import Header
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
@@ -17,7 +15,7 @@ handler = WebhookHandler(app_settings.line_channel_secret)
 
 @app.get("/")
 def health_check():
-    return "ok"
+    return {"data": "ok"}
 
 
 @app.post("/callback")
@@ -43,4 +41,7 @@ def handle_message(
 ):
     line_bot_api.reply_message(
         event.reply_token,
-        TextSendMessage(text=event.message.text))
+        TextSendMessage(
+            text=event.message.text
+        )
+    )
