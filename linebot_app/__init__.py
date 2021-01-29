@@ -2,16 +2,20 @@ import logging
 import sys
 import traceback
 
-from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse
+from linebot import LineBotApi, WebhookHandler
 
 from linebot_app.config import get_api_settings, get_app_settings
+from linebot_app.util import logger
 
-load_dotenv()
 api_settings = get_api_settings()
 app_settings = get_app_settings()
+
+handler = WebhookHandler(app_settings.line_channel_secret)
+line_bot_api = LineBotApi(app_settings.line_channel_access_token)
+
 
 # created fast api instance ######
 app = FastAPI(
@@ -68,5 +72,5 @@ async def handle_exception(request: Request, exc: Exception) -> dict:
         status_code=500
     )
 
-from linebot_app.util import logger
-from linebot_app import views
+
+from linebot_app import events, views

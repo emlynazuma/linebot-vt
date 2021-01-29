@@ -1,6 +1,10 @@
 from functools import lru_cache
 from typing import Optional
+
+from dotenv import load_dotenv
 from pydantic import BaseSettings
+
+load_dotenv()
 
 
 class APISettings(BaseSettings):

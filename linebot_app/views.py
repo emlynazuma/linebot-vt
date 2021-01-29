@@ -1,16 +1,14 @@
+from secrets import token_urlsafe
+
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Header
-from linebot import LineBotApi, WebhookHandler
+from fastapi.params import Query
 from linebot.exceptions import InvalidSignatureError
-from linebot.models import MessageEvent, TextMessage, TextSendMessage
 from starlette.requests import Request
+from starlette.responses import RedirectResponse
 
-from linebot_app import app, app_settings
+from linebot_app import app, handler
 from linebot_app.util import logger
-
-
-line_bot_api = LineBotApi(app_settings.line_channel_access_token)
-handler = WebhookHandler(app_settings.line_channel_secret)
 
 
 @app.get("/")
@@ -35,13 +33,9 @@ async def callback(
     return 'OK'
 
 
-@handler.add(MessageEvent, message=TextMessage)
-def handle_message(
-    event: MessageEvent
+@app.get("/accountBindingTest")
+async def account_binding(
+    link_token: str = Query(None, alias="linkToken")
 ):
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(
-            text=event.message.text
-        )
-    )
+
+    return RedirectResponse(url=f'https://access.line.me/dialog/bot/accountLink?linkToken={link_token}&nonce={token_urlsafe(16)}')
