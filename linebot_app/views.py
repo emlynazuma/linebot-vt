@@ -1,3 +1,4 @@
+import hashlib
 from secrets import token_urlsafe
 from typing import Optional
 
@@ -44,20 +45,19 @@ async def account_binding(
 
 @app.get("/accountBindingRedirect/linkToken/{link_token}")
 async def account_redirect(
-    request: Request,
-    response: Response,
     link_token: str,
     access_token: Optional[str] = Cookie(None, alias="accessToken"),
 ):
-    print(response.headers)
-    print(request.headers)
-    print(access_token)
-    # return RedirectResponse(url=f'https://access.line.me/dialog/bot/accountLink?linkToken={link_token}&nonce={nonce}')
-    try:
-        user_id = jwt.decode(access_token, options={"verify_signature": False})
-    except Exception:
-        user_id = None
-    return {
-        "link_token": link_token,
-        "user_id": user_id,
-    }
+    nonce = ""
+    if access_token:
+        encoded = jwt.decode(
+            access_token,
+            options={
+                "verify_signature": False
+            },
+        )
+        user_id = encoded.get("user_id").get("sub")
+        nonce = hashlib.sha256(str(user_id).encode()).hexdigest()
+    return RedirectResponse(
+        url=f'https://access.line.me/dialog/bot/accountLink?linkToken={link_token}&nonce={nonce}'
+    )
