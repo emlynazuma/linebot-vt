@@ -50,13 +50,13 @@ async def account_redirect(
 ):
     nonce = ""
     if access_token:
-        encoded = jwt.decode(
+        decoded = jwt.decode(
             access_token,
             options={
                 "verify_signature": False
             },
         )
-        user_id = encoded.get("user_id").get("sub")
+        user_id = decoded.get("sub")
         nonce = hashlib.sha256(str(user_id).encode()).hexdigest()
     return RedirectResponse(
         url=f'https://access.line.me/dialog/bot/accountLink?linkToken={link_token}&nonce={nonce}'
