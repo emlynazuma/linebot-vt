@@ -19,15 +19,10 @@ class APISettings(BaseSettings):
 
 
 class APPSettings(BaseSettings):
+    app_env: str
+    app_debug: bool
     project: str
-    db_host: str
-    db_port: str
-    db_database: str
-    db_username: str
-    db_password: str
-    datascientist_domain: str
-    auth_domain: str
-    vta_domain: str
+    account_domain: str
     line_channel_access_token: str
     line_channel_secret: str
 

@@ -7,11 +7,9 @@ from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse
 from linebot import LineBotApi, WebhookHandler
 
-from linebot_app.config import get_api_settings, get_app_settings
+from linebot_app.const import api_settings, app_settings
 from linebot_app.util import logger
 
-api_settings = get_api_settings()
-app_settings = get_app_settings()
 
 handler = WebhookHandler(app_settings.line_channel_secret)
 line_bot_api = LineBotApi(app_settings.line_channel_access_token)
@@ -23,7 +21,7 @@ app = FastAPI(
     description=api_settings.description,
     docs_url=api_settings.docs_url,
     redoc_url=api_settings.redoc_url,
-    version=api_settings.version
+    version=api_settings.version,
 )
 
 
