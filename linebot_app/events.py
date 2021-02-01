@@ -1,9 +1,13 @@
 from urllib.parse import urlparse
-from linebot.models import MessageEvent, TextMessage, TextSendMessage, AccountLinkEvent
-from linebot_app import handler, line_bot_api, app_settings
+
+from linebot.models import (AccountLinkEvent, ButtonsTemplate, MessageEvent,
+                            TemplateSendMessage, TextMessage, TextSendMessage)
+from linebot.models.actions import URIAction
+
+from linebot_app import app_settings, handler, line_bot_api
 
 
-def binding_url(link_token):
+def redirected_url(link_token):
     redirect_domain = urlparse(
         line_bot_api
         .get_webhook_endpoint()
@@ -19,18 +23,32 @@ def binding_url(link_token):
 def handle_message(
     event: MessageEvent
 ):
-    reply = event.message.text
     if event.message.text == "綁定會員":
         link_token = line_bot_api.issue_link_token(event.source.user_id).link_token
         account_domain = app_settings.account_domain
-        reply = f"{account_domain}/login?next={binding_url(link_token)}"
 
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(
-            text=reply
+        line_bot_api.reply_message(
+            event.reply_token,
+            TemplateSendMessage(
+                alt_text="會員綁定功能",
+                template=ButtonsTemplate(
+                    text="綁定會員",
+                    actions=[
+                        URIAction(
+                            label="按此綁定",
+                            uri=f"{account_domain}/login?next={redirected_url(link_token)}"
+                        )
+                    ]
+                )
+            )
         )
-    )
+    else:
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(
+                text=event.message.text
+            )
+        )
 
 
 @handler.add(
