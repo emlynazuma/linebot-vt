@@ -131,7 +131,7 @@ substitutions:
   _CLOUDSDK_COMPUTE_ZONE: "asia-east1-a"
   _DOT_ENV: "linebot-prod-env"
   _BUCKEY: vt-s-private
-  _MIN_REPLICAS: "2"
-  _MAX_REPLICAS: "10"
+  _MIN_REPLICAS: "1"
+  _MAX_REPLICAS: "1"
   _TARGET_CPU_LOADING: "0.7"
   _GCP_PROJECT_NUMBER: "652727413079"

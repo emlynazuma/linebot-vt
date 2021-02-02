@@ -135,6 +135,6 @@ substitutions:
   _DOT_ENV: "linebot-test-env"
   _BUCKEY: "vt-t-private"
   _MIN_REPLICAS: "1"
-  _MAX_REPLICAS: "5"
+  _MAX_REPLICAS: "1"
   _TARGET_CPU_LOADING: "0.7"
   _GCP_PROJECT_NUMBER: "230108503268"
