@@ -65,7 +65,7 @@ def confirm_account_link(
         insert_data_to_db(
             (
                 "INSERT INTO users (`user_id`, `line_id`, `is_linked`)"
-                "VALUES (%(user_id)s, %(line_id)s), %(is_linked)s)"
+                "VALUES (%(user_id)s, %(line_id)s, %(is_linked)s)"
                 "ON DUPLICATE KEY UPDATE `user_id` = VALUES(user_id)"
             ),
             [{
