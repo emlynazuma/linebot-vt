@@ -1,10 +1,10 @@
 from urllib.parse import urlparse
 
-from linebot.models import ButtonsTemplate, TextSendMessage
 from linebot.models.actions import URIAction
 from linebot.models.events import AccountLinkEvent, MessageEvent, UnfollowEvent
 from linebot.models.messages import TextMessage
-from linebot.models.template import TemplateSendMessage
+from linebot.models.send_messages import TextSendMessage
+from linebot.models.template import ButtonsTemplate, TemplateSendMessage
 
 from linebot_app import app_settings, handler, line_bot_api
 from linebot_app.util import decrypt, insert_data_to_db
@@ -104,10 +104,7 @@ def confirm_account_link(
     event: UnfollowEvent
 ):
     line_id = event.source.user_id
-    line_bot_api.unlink_rich_menu_from_user(
-        line_id,
-        rich_menu_id
-    )
+    line_bot_api.unlink_rich_menu_from_user(line_id)
     insert_data_to_db(
         (
             "UPDATE `users` SET `is_linked` = %(is_linked)s WHERE `line_id` = %(line_id)s;"
