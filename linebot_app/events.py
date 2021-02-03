@@ -71,7 +71,7 @@ def confirm_account_link(
             [{
                 "user_id": decrypt(event.link.nonce),
                 "line_id": user_id,
-                "user_id": True,
+                "is_linked": True,
             }]
         )
         line_bot_api.link_rich_menu_to_user(
