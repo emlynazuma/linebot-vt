@@ -9,7 +9,7 @@ from linebot.models.template import ButtonsTemplate, TemplateSendMessage
 from linebot_app import app_settings, handler, line_bot_api
 from linebot_app.util import decrypt, insert_data_to_db
 
-rich_menu_id = "richmenu-471723b752eb80bc49eb9cdea46fc50a"
+rich_menu_id = "richmenu-c11279f3813d050071852b260237635b"
 
 
 def redirected_url(link_token):
