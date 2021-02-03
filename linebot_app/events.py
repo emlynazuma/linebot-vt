@@ -1,7 +1,7 @@
 from urllib.parse import urlparse
 
 from linebot.models.actions import URIAction
-from linebot.models.events import AccountLinkEvent, MessageEvent, UnfollowEvent
+from linebot.models.events import AccountLinkEvent, MessageEvent
 from linebot.models.messages import TextMessage
 from linebot.models.send_messages import TextSendMessage
 from linebot.models.template import ButtonsTemplate, TemplateSendMessage
@@ -78,10 +78,10 @@ def confirm_account_link(
                 "is_linked": True,
             }]
         )
-        line_bot_api.link_rich_menu_to_user(
-            line_id,
-            rich_menu_id
-        )
+        # line_bot_api.link_rich_menu_to_user(
+        #     line_id,
+        #     rich_menu_id
+        # )
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
@@ -95,22 +95,3 @@ def confirm_account_link(
                 text="account binding failed"
             )
         )
-
-
-@handler.add(
-    UnfollowEvent
-)
-def confirm_account_link(
-    event: UnfollowEvent
-):
-    line_id = event.source.user_id
-    line_bot_api.unlink_rich_menu_from_user(line_id)
-    insert_data_to_db(
-        (
-            "UPDATE `users` SET `is_linked` = %(is_linked)s WHERE `line_id` = %(line_id)s;"
-        ),
-        [{
-            "line_id": line_id,
-            "is_linked": False,
-        }]
-    )
