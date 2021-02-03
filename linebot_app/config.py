@@ -25,6 +25,12 @@ class APPSettings(BaseSettings):
     account_domain: str
     line_channel_access_token: str
     line_channel_secret: str
+    encrypt_key: str
+    db_host: str
+    db_port: int
+    db_database: str
+    db_username: str
+    db_password: str
 
     class Config:
         env_file = ".env"

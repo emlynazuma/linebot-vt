@@ -5,6 +5,7 @@ from linebot.models import (AccountLinkEvent, ButtonsTemplate, MessageEvent,
 from linebot.models.actions import URIAction
 
 from linebot_app import app_settings, handler, line_bot_api
+from linebot_app.util import decrypt, insert_data_to_db
 
 
 def redirected_url(link_token):
@@ -13,7 +14,7 @@ def redirected_url(link_token):
         .get_webhook_endpoint()
         .endpoint
     ).netloc
-    return f"""https://{redirect_domain}/accountBindingRedirect/linkToken/{link_token}"""
+    return f"""https://{redirect_domain}/accountBindingRedirect/{link_token}"""
 
 
 @handler.add(
@@ -24,9 +25,10 @@ def handle_message(
     event: MessageEvent
 ):
     if event.message.text == "綁定會員":
-        link_token = line_bot_api.issue_link_token(event.source.user_id).link_token
         account_domain = app_settings.account_domain
-
+        link_token = line_bot_api \
+            .issue_link_token(event.source.user_id) \
+            .link_token
         line_bot_api.reply_message(
             event.reply_token,
             TemplateSendMessage(
@@ -36,7 +38,8 @@ def handle_message(
                     actions=[
                         URIAction(
                             label="按此綁定",
-                            uri=f"{account_domain}/login?next={redirected_url(link_token)}"
+                            uri=f"{account_domain}/login?next={redirected_url(link_token)}",
+                            type="uri",
                         )
                     ]
                 )
@@ -58,6 +61,16 @@ def confirm_account_link(
     event: AccountLinkEvent
 ):
     if event.link.result == "ok":
+        insert_data_to_db(
+            (
+                "INSERT INTO users (`user_id`, `line_id`)"
+                "VALUES (%(user_id)s, %(line_id)s)"
+            ),
+            [{
+                "user_id": decrypt(event.link.nonce),
+                "line_id": event.source.user_id,
+            }]
+        )
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
