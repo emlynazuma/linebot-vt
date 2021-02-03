@@ -34,7 +34,7 @@ def insert_data_to_db(statement: str, data: list):
         statement (str): The statement of the insertion.
         data (list, optional): [description]. The data to be inserted. Must be list of tupples or dictionaries.
     """
-    cnx = mysql.connector.connection(**VOICETUBE_DB_CONFIG)
+    cnx = mysql.connector.connect(**VOICETUBE_DB_CONFIG)
     cursor = cnx.cursor()
     cursor.executemany(statement, data)
     cnx.commit()
