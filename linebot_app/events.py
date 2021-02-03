@@ -61,17 +61,23 @@ def confirm_account_link(
     event: AccountLinkEvent
 ):
     if event.link.result == "ok":
+        user_id = event.source.user_id
         insert_data_to_db(
             (
-                "INSERT INTO users (`user_id`, `line_id`)"
-                "VALUES (%(user_id)s, %(line_id)s)"
+                "INSERT INTO users (`user_id`, `line_id`, `is_linked`)"
+                "VALUES (%(user_id)s, %(line_id)s), %(is_linked)s)"
+                "ON DUPLICATE KEY UPDATE `user_id` = VALUES(user_id)"
             ),
             [{
                 "user_id": decrypt(event.link.nonce),
-                "line_id": event.source.user_id,
+                "line_id": user_id,
+                "user_id": True,
             }]
         )
-        line_bot_api.link_rich_menu_to_user(event.source.user_id, "richmenu-471723b752eb80bc49eb9cdea46fc50a")
+        line_bot_api.link_rich_menu_to_user(
+            user_id,
+            "richmenu-471723b752eb80bc49eb9cdea46fc50a"
+        )
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
