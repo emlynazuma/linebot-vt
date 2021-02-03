@@ -1,11 +1,15 @@
 from urllib.parse import urlparse
 
-from linebot.models import (AccountLinkEvent, ButtonsTemplate, MessageEvent,
-                            TemplateSendMessage, TextMessage, TextSendMessage)
+from linebot.models import ButtonsTemplate, TextSendMessage
 from linebot.models.actions import URIAction
+from linebot.models.events import AccountLinkEvent, MessageEvent, UnfollowEvent
+from linebot.models.messages import TextMessage
+from linebot.models.template import TemplateSendMessage
 
 from linebot_app import app_settings, handler, line_bot_api
 from linebot_app.util import decrypt, insert_data_to_db
+
+rich_menu_id = "richmenu-471723b752eb80bc49eb9cdea46fc50a"
 
 
 def redirected_url(link_token):
@@ -61,22 +65,22 @@ def confirm_account_link(
     event: AccountLinkEvent
 ):
     if event.link.result == "ok":
-        user_id = event.source.user_id
+        line_id = event.source.user_id
         insert_data_to_db(
             (
                 "INSERT INTO users (`user_id`, `line_id`, `is_linked`)"
                 "VALUES (%(user_id)s, %(line_id)s, %(is_linked)s)"
-                "ON DUPLICATE KEY UPDATE `user_id` = VALUES(user_id)"
+                "ON DUPLICATE KEY UPDATE `is_linked` = VALUES(is_linked)"
             ),
             [{
                 "user_id": decrypt(event.link.nonce),
-                "line_id": user_id,
+                "line_id": line_id,
                 "is_linked": True,
             }]
         )
         line_bot_api.link_rich_menu_to_user(
-            user_id,
-            "richmenu-471723b752eb80bc49eb9cdea46fc50a"
+            line_id,
+            rich_menu_id
         )
         line_bot_api.reply_message(
             event.reply_token,
@@ -91,3 +95,25 @@ def confirm_account_link(
                 text="account binding failed"
             )
         )
+
+
+@handler.add(
+    UnfollowEvent
+)
+def confirm_account_link(
+    event: UnfollowEvent
+):
+    line_id = event.source.user_id
+    line_bot_api.unlink_rich_menu_from_user(
+        line_id,
+        rich_menu_id
+    )
+    insert_data_to_db(
+        (
+            "UPDATE `users` SET `is_linked` = %(is_linked)s WHERE `line_id` = %(line_id)s;"
+        ),
+        [{
+            "line_id": line_id,
+            "is_linked": False,
+        }]
+    )
